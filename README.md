@@ -1,4 +1,4 @@
-![image](https://hub.steampipe.io/images/plugins/turbot/cloudflare-social-graphic.png)
+![](https://git.sk5.io/skale-5/run/steampipe/steampipe-plugin-eol/-/raw/main/docs/usage.gif)
 
 # endoflife.date Plugin for Steampipe
 

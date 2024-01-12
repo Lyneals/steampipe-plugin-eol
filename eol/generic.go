@@ -19,7 +19,7 @@ type Eol struct {
 	ReleaseDate       string      `json:"releaseDate",omitempty`
 	Latest            string      `json:"latest",omitempty`
 	LatestReleaseDate string      `json:"latestReleaseDate",omitempty`
-	Lts               bool        `json:"lts,omitempty"`
+	Lts               interface{} `json:"lts,omitempty"`
 	Eol               interface{} `json:"eol",omitempty`
 	DaysToEol         int
 }
@@ -74,6 +74,10 @@ func listGeneric(tech string) func(ctx context.Context, d *plugin.QueryData, h *
 			// For latest release, EOL might be a boolean
 			if reflect.TypeOf(v.Eol).Kind() == reflect.Bool {
 				v.Eol = now.AddDate(1, 0, 0).Format("2006-01-02")
+			}
+			// Sometime LTS is a string, cast it to bool
+			if reflect.TypeOf(v.Lts).Kind() == reflect.String {
+				v.Lts = false
 			}
 			eol := v.Eol.(string)
 			time, _ := time.Parse("2006-01-02", eol)
