@@ -9,7 +9,20 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
 
-var eolKeys = [...]string{"amazon-eks", "amazon-rds-mysql", "amazon-rds-postgresql", "debian", "ubuntu", "argo-cd", "ansible"}
+var eolKeys = [...]string{
+	"amazon-eks",
+	"amazon-rds-mysql",
+	"amazon-rds-postgresql",
+	"google-kubernetes-engine",
+	"debian",
+	"ubuntu",
+	"argo-cd",
+	"ansible",
+	"mariadb",
+	"redis",
+	"nginx",
+	"memcached",
+}
 
 func Plugin(ctx context.Context) *plugin.Plugin {
 	p := &plugin.Plugin{

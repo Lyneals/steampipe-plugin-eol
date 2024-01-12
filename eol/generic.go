@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -14,12 +15,12 @@ import (
 )
 
 type Eol struct {
-	Cycle             string `json:"cycle",omitempty`
-	ReleaseDate       string `json:"releaseDate",omitempty`
-	Eol               string `json:"eol"`
-	Latest            string `json:"latest",omitempty`
-	LatestReleaseDate string `json:"latestReleaseDate",omitempty`
-	Lts               bool   `json:"lts,omitempty"`
+	Cycle             string      `json:"cycle",omitempty`
+	ReleaseDate       string      `json:"releaseDate",omitempty`
+	Latest            string      `json:"latest",omitempty`
+	LatestReleaseDate string      `json:"latestReleaseDate",omitempty`
+	Lts               bool        `json:"lts,omitempty"`
+	Eol               interface{} `json:"eol",omitempty`
 	DaysToEol         int
 }
 
@@ -50,31 +51,34 @@ func listGeneric(tech string) func(ctx context.Context, d *plugin.QueryData, h *
 		now := time.Now()
 
 		if err != nil {
-			plugin.Logger(ctx).Error("listGeneric", tech, err)
+			plugin.Logger(ctx).Error("eol.listGeneric", tech, err)
 			return nil, err
 		}
 
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			plugin.Logger(ctx).Error("listGeneric", tech, resp.StatusCode)
+			plugin.Logger(ctx).Error("eol.listGeneric", tech, resp.StatusCode)
 			return nil, err
 		}
 
 		var versions []Eol
 		err = json.NewDecoder(resp.Body).Decode(&versions)
 
-		plugin.Logger(ctx).Debug("listGeneric", tech, versions)
-
 		if err != nil {
-			plugin.Logger(ctx).Error("listGeneric", tech, err)
+			plugin.Logger(ctx).Error("eol.listGeneric", tech, err)
 			return nil, err
 		}
 
 		for _, v := range versions {
-			time, _ := time.Parse("2006-01-02", v.Eol)
+			// For latest release, EOL might be a boolean
+			if reflect.TypeOf(v.Eol).Kind() == reflect.Bool {
+				v.Eol = now.AddDate(1, 0, 0).Format("2006-01-02")
+			}
+			eol := v.Eol.(string)
+			time, _ := time.Parse("2006-01-02", eol)
 			v.DaysToEol = int(time.Sub(now).Hours() / 24)
-			plugin.Logger(ctx).Debug("listGeneric", tech, v)
+			plugin.Logger(ctx).Debug("eol.listGeneric", tech, v)
 			d.StreamListItem(ctx, v)
 		}
 		return nil, nil
