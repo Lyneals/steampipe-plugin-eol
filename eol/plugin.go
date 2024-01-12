@@ -2,27 +2,14 @@ package eol
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin/transform"
 )
-
-var eolKeys = [...]string{
-	"amazon-eks",
-	"amazon-rds-mysql",
-	"amazon-rds-postgresql",
-	"google-kubernetes-engine",
-	"debian",
-	"ubuntu",
-	"argo-cd",
-	"ansible",
-	"mariadb",
-	"redis",
-	"nginx",
-	"memcached",
-}
 
 func Plugin(ctx context.Context) *plugin.Plugin {
 	p := &plugin.Plugin{
@@ -34,11 +21,26 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 }
 
 func PluginTables(ctx context.Context, d *plugin.TableMapData) (map[string]*plugin.Table, error) {
-
 	// Initialize tables
 	tables := map[string]*plugin.Table{}
 
-	for _, key := range eolKeys {
+	// Request https://endoflife.date/api/all.json to get all supported products
+	resp, err := http.Get("https://endoflife.date/api/all.json")
+
+	if err != nil {
+		plugin.Logger(ctx).Error("eol.PluginTables", "all_request", err)
+		return nil, err
+	}
+
+	var products []string
+	err = json.NewDecoder(resp.Body).Decode(&products)
+
+	if err != nil {
+		plugin.Logger(ctx).Error("eol.PluginTables", "all_decode", err)
+		return nil, err
+	}
+
+	for _, key := range products {
 		tableName := fmt.Sprintf("eol_%s", strings.ReplaceAll(key, "-", "_"))
 		tables[tableName] = tableGeneric(key)
 	}

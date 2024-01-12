@@ -27,7 +27,7 @@ type Eol struct {
 func tableGeneric(tech string) *plugin.Table {
 	return &plugin.Table{
 		Name:             fmt.Sprintf("eol_%s", strings.ReplaceAll(tech, "_", "-")),
-		Description:      "Give EOL date using endoflife.date",
+		Description:      fmt.Sprintf("Retrieve %s EOL information using endoflife.date", tech),
 		DefaultTransform: transform.FromGo(),
 		List: &plugin.ListConfig{
 			Hydrate: listGeneric(tech),
